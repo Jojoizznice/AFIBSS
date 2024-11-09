@@ -33,9 +33,7 @@ class Uisge:
         for j in range(len(self.game_state[0])):
             for i in range(len(self.game_state)-1, 0, -1):
                 if self.game_state[i][j] != '':
-                    print(i,j, self.game_state[i][j], self.game_state[j][i])
                     self.pieces.append(Figuren(self.screen, (i,j), self.game_state[i][j][0], int(self.game_state[i][j][2])))
-                    print(int(self.game_state[i][j][2]))
         self.last_pressed = None
     
     def move(self):
@@ -52,12 +50,10 @@ class Uisge:
                         self.last_pressed.color = (204,193,159)
                 m_pos = pygame.mouse.get_pos()
                 m_pos = [m_pos[0]//64, m_pos[1]//64]
-                print(m_pos)
                 if self.game_state[m_pos[0]][m_pos[1]] != '':
                     
                     if self.game_state[m_pos[0]][m_pos[1]][0] == 'b':
                         piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])]
-                        print(piece.pos, self.game_state[piece.pos[0]][piece.pos[1]])
                         piece.color = (90,80,67)
                     else:
                         piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])+6]
@@ -68,17 +64,12 @@ class Uisge:
                         pass
                 else:
                     if self.last_pressed:
-                        print(math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2))
                         if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 2:
-                            
                             if self.game_state[self.last_pressed.pos[0]+int((m_pos[0]-self.last_pressed.pos[0])/2)][self.last_pressed.pos[1]+int((m_pos[1]-self.last_pressed.pos[1])/2)] != '':
                                 self.game_state[m_pos[0]][m_pos[1]] = self.game_state[self.last_pressed.pos[0]][self.last_pressed.pos[1]]
                                 self.game_state[self.last_pressed.pos[0]][self.last_pressed.pos[1]] = ''
-                                print(self.game_state)
-                                print(self.game_state[self.last_pressed.pos[0]][self.last_pressed.pos[1]], self.game_state[m_pos[0]][m_pos[1]])
                                 self.last_pressed.pos = m_pos
                                 self.last_pressed.state *= -1
-                                print(self.last_pressed.state)
                                 self.last_pressed = None
                     
     
