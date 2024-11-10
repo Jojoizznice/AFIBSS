@@ -32,6 +32,7 @@ class Uisge:
             for i in range(len(self.game_state)-1, 0, -1):
                 if self.game_state[i][j] != '':
                     self.pieces.append(Figuren(self.screen, (i,j), self.game_state[i][j][0], int(self.game_state[i][j][2])))
+        self.turn = 'w'
         self.last_pressed = None
     
     def move(self):
@@ -49,14 +50,14 @@ class Uisge:
                 m_pos = pygame.mouse.get_pos()
                 m_pos = [m_pos[0]//64, m_pos[1]//64]
                 if self.game_state[m_pos[0]][m_pos[1]] != '':
-                    
-                    if self.game_state[m_pos[0]][m_pos[1]][0] == 'b':
-                        piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])]
-                        piece.color = (90,80,67)
-                    else:
-                        piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])+6]
-                        piece.color = (161,148,119)
-                    self.last_pressed = piece
+                    if self.game_state[m_pos[0]][m_pos[1]][0] == self.turn:
+                        if self.game_state[m_pos[0]][m_pos[1]][0] == 'b' and self.turn == 'b':
+                            piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])]
+                            piece.color = (90,80,67)
+                        elif self.turn == 'w':
+                            piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])+6]
+                            piece.color = (161,148,119)
+                        self.last_pressed = piece
                 else:
                     if self.last_pressed:
                         if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 2:
@@ -71,6 +72,7 @@ class Uisge:
                                     self.last_pressed.state *= -1
                                     #res = self.rules_check(m_pos)
                                     self.last_pressed = None
+                                    self.turn = 'b' if self.turn == 'w' else 'w'
                                 
                                 if res[0]:
                                     print(res[1])
