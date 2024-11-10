@@ -63,17 +63,15 @@ class Uisge:
                         if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 2:
                             
                             if self.game_state[self.last_pressed.pos[0]+int((m_pos[0]-self.last_pressed.pos[0])/2)][self.last_pressed.pos[1]+int((m_pos[1]-self.last_pressed.pos[1])/2)] != '':                       
-                                save_last_pressed_pos = self.last_pressed.pos
-                                res = self.rules_check(m_pos)
+                                res = self.rules_check(m_pos, self.last_pressed.pos)
+                                print(self.last_pressed.pos)
                                 self.last_pressed.pos = res[-1]
-                                if self.last_pressed.pos == m_pos:
-                                    self.game_state[m_pos[0]][m_pos[1]] = self.game_state[save_last_pressed_pos[0]][save_last_pressed_pos[1]]
-                                    self.game_state[save_last_pressed_pos[0]][save_last_pressed_pos[1]] = '' 
+                                print(self.last_pressed.pos)
+                                if self.last_pressed.pos == m_pos:                                    
                                     self.last_pressed.state *= -1
-                                    #res = self.rules_check(m_pos)
                                     self.last_pressed = None
                                     self.turn = 'b' if self.turn == 'w' else 'w'
-                                
+                                print(self.game_state)
                                 if res[0]:
                                     print(res[1])
                                     pygame.quit()
@@ -81,21 +79,20 @@ class Uisge:
                         elif self.last_pressed.state == 1:
                             if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 1 or math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == math.sqrt(2):
                                 if self.game_state[m_pos[0]][m_pos[1]] == '':
-                                    res = self.rules_check(m_pos)
-                                    save_last_pressed_pos = self.last_pressed.pos
+                                    res = self.rules_check(m_pos, self.last_pressed.pos)
                                     self.last_pressed.pos = res[-1]
                                     if self.last_pressed.pos == m_pos:
-                                        self.game_state[m_pos[0]][m_pos[1]] = self.game_state[save_last_pressed_pos[0]][save_last_pressed_pos[1]]
-                                        self.game_state[save_last_pressed_pos[0]][save_last_pressed_pos[1]] = '' 
+                                        self.turn = 'b' if self.turn == 'w' else 'w' 
                                     self.last_pressed = None
+                                    print(self.game_state)
                                     if res[0]:
                                         print(res[1])
                                         pygame.quit()
                                         sys.exit()
                         
     
-    def rules_check(self, m_pos):
-        res = [self.last_pressed.pos]
+    def rules_check(self, m_pos, last_pos):
+        res = [last_pos]
         check = 0
         if len(self.game_state) > m_pos[0]+1:
                 if self.game_state[m_pos[0]+1][m_pos[1]] != '' and self.game_state[m_pos[0]+1][m_pos[1]] != f'{self.last_pressed.identity}_{self.last_pressed.index}':
@@ -110,11 +107,14 @@ class Uisge:
             if self.game_state[m_pos[0]][m_pos[1]-1] != '' and self.game_state[m_pos[0]][m_pos[1]-1] != f'{self.last_pressed.identity}_{self.last_pressed.index}':
                 check += 1
         if check == 0:
-            res[0] = self.last_pressed.pos
+            pass
         else:
             res[0] = m_pos
-            save = [self.last_pressed.pos[0], self.last_pressed.pos[1]]
-            self.last_pressed.pos = m_pos
+            save = self.game_state[last_pos[0]][last_pos[1]]
+            self.game_state[last_pos[0]][last_pos[1]] = ''
+            self.game_state[m_pos[0]][m_pos[1]] = save
+            print(self.game_state, "Hello")
+            
         if check != 0:
             for piece in self.pieces:
                 if check != 0:
@@ -132,7 +132,10 @@ class Uisge:
                         if self.game_state[piece.pos[0]][piece.pos[1]-1] != '':
                             check += 1
                     if check == 0:
-                        res[0] = save
+                        res[0] = last_pos
+                        self.game_state[m_pos[0]][m_pos[1]] = ''
+                        self.game_state[last_pos[0]][last_pos[1]] = save
+                        print("Hello world")
                         break
                     else:
                         res[0] = m_pos
