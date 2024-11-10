@@ -27,6 +27,7 @@ class Uisge:
             ['','','b_2','','',''],
             ['','','','','','']
             ]
+        self.pre_game_state = self.game_state.copy()
         self.pieces = []
         for j in range(len(self.game_state[0])):
             for i in range(len(self.game_state)-1, 0, -1):
@@ -134,6 +135,9 @@ class Uisge:
                     else:
                         res[0] = m_pos
         check = 0
+
+        self.check_connection()
+
         for i in range((len(self.pieces)//2)):
             if self.pieces[i].state == 1:
                 check += 1
@@ -156,7 +160,81 @@ class Uisge:
             if check == 6:
                 res.insert(0, 'White wins')
                 res.insert(0, True)
-                return res      
+                return res     
+
+    def check_connection(self):
+        check = [['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','','']]   # same as self.game_state
+        
+        first: int = self.get_first_field(self.game_state)
+
+        (firstR, firstW) = self.int_to_pos(first)
+
+        check[firstR][firstW] = '0' # first piece is placed in array
+
+        poslist: list[int] = [first]
+        
+        while True:
+            if len(poslist) == 0:
+                break
+
+            if ([5, 11, 17, 23, 19, 35, 41].__contains__(poslist[0]) == False): #exclude right out of bounds 
+                self.connection_mover(poslist[0], 1, poslist, check) # checking all 4 dirs
+            if ([0, 6, 12, 18, 24, 30, 36].__contains__(poslist[0]) == False): #exclude left out of bounds 
+                self.connection_mover(poslist[0], -1, poslist, check)
+
+            if (poslist[0] < 36): #exclude right out of bounds 
+                self.connection_mover(poslist[0], 6, poslist, check)
+            if (poslist[0] > 5): #exclude left out of bounds 
+                self.connection_mover(poslist[0], -6, poslist, check)
+            poslist.remove(poslist[0])
+        
+        ctr = 0
+        for row in check:
+            for piece in row:
+                if (piece != ''):
+                    ctr += 1
+
+        if (ctr != 12):
+            print("check failed")
+            self.game_state = self.pre_game_state
+            
+        
+    def connection_mover(
+            self,
+            pos: int, 
+            dir: int, 
+            poslist: list[int], 
+            check: list[list[str]]): # dir must be 1, -1, 6 or -6
+    
+        if ([1, -1, 6, -6].__contains__(dir) == -1):
+            raise ValueError(f"internal error in check_connection, was {dir}")
+
+        pos += dir
+        (r, w) = self.int_to_pos(pos)
+
+        if (self.game_state[r][w] != '' and check[r][w] != '0'): # check if piece placed and not already there
+            check[r][w] = '0'
+            poslist.append(pos) # needs further check
+
+
+
+    @staticmethod             
+    def pos_to_int(row, width):
+        return 6 * row + width
+    
+    @staticmethod
+    def int_to_pos(pos):
+        r = int(pos / 6) # row from top
+        w = pos - 6 * int(pos / 6) # width from right
+        return (r, w)
+        
+    def get_first_field(self, arr: list[list[str]]):
+        ctr = 0
+        for row in arr:
+            for piece in row:
+                if piece != '':
+                    return ctr
+                ctr += 1
 
     def run(self):
         while True:
