@@ -176,3 +176,12 @@ class Uisge:
 if __name__ == '__main__':
     main = Uisge()
     main.run()
+
+             
+    def pos_to_int(row, width):
+        return 6 * row + width
+    
+    def int_to_pos(pos):
+        r = int(pos / 6) # row from top
+        w = pos - 6 * int(pos / 6) # width from right
+        return (r, w)
