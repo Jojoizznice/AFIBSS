@@ -64,14 +64,11 @@ class Uisge:
                             
                             if self.game_state[self.last_pressed.pos[0]+int((m_pos[0]-self.last_pressed.pos[0])/2)][self.last_pressed.pos[1]+int((m_pos[1]-self.last_pressed.pos[1])/2)] != '':                       
                                 res = self.rules_check(m_pos, self.last_pressed.pos)
-                                print(self.last_pressed.pos)
                                 self.last_pressed.pos = res[-1]
-                                print(self.last_pressed.pos)
                                 if self.last_pressed.pos == m_pos:                                    
                                     self.last_pressed.state *= -1
                                     self.last_pressed = None
                                     self.turn = 'b' if self.turn == 'w' else 'w'
-                                print(self.game_state)
                                 if res[0]:
                                     print(res[1])
                                     pygame.quit()
@@ -84,7 +81,6 @@ class Uisge:
                                     if self.last_pressed.pos == m_pos:
                                         self.turn = 'b' if self.turn == 'w' else 'w' 
                                     self.last_pressed = None
-                                    print(self.game_state)
                                     if res[0]:
                                         print(res[1])
                                         pygame.quit()
@@ -113,7 +109,6 @@ class Uisge:
             save = self.game_state[last_pos[0]][last_pos[1]]
             self.game_state[last_pos[0]][last_pos[1]] = ''
             self.game_state[m_pos[0]][m_pos[1]] = save
-            print(self.game_state, "Hello")
             
         if check != 0:
             for piece in self.pieces:
@@ -135,7 +130,6 @@ class Uisge:
                         res[0] = last_pos
                         self.game_state[m_pos[0]][m_pos[1]] = ''
                         self.game_state[last_pos[0]][last_pos[1]] = save
-                        print("Hello world")
                         break
                     else:
                         res[0] = m_pos
