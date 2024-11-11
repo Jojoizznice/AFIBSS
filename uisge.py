@@ -27,7 +27,6 @@ class Uisge:
             ['','','b_2','','',''],
             ['','','','','','']
             ]
-        self.pre_game_state = self.game_state.copy()
         self.pieces = []
         for j in range(len(self.game_state[0])):
             for i in range(len(self.game_state)-1, 0, -1):
@@ -196,7 +195,6 @@ class Uisge:
 
         if (ctr != 12):
             print("check failed")
-            self.game_state = self.pre_game_state
             
         
     def connection_mover(
