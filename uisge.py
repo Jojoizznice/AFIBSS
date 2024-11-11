@@ -1,3 +1,4 @@
+
 import pygame
 import sys
 import math
@@ -27,6 +28,7 @@ class Uisge:
             ['','','b_2','','',''],
             ['','','','','','']
             ]
+        self.pre_game_state = self.game_state.copy()
         self.pieces = []
         for j in range(len(self.game_state[0])):
             for i in range(len(self.game_state)-1, 0, -1):
@@ -80,7 +82,7 @@ class Uisge:
                                     self.last_pressed.pos = res[-1]
                                     if self.last_pressed.pos == m_pos:
                                         self.turn = 'b' if self.turn == 'w' else 'w' 
-                                    self.last_pressed = None
+                                        self.last_pressed = None
                                     if res[0]:
                                         print(res[1])
                                         pygame.quit()
@@ -90,6 +92,7 @@ class Uisge:
     def rules_check(self, m_pos, last_pos):
         res = [last_pos]
         check = 0
+        save = self.game_state[last_pos[0]][last_pos[1]]
         if len(self.game_state) > m_pos[0]+1:
                 if self.game_state[m_pos[0]+1][m_pos[1]] != '' and self.game_state[m_pos[0]+1][m_pos[1]] != f'{self.last_pressed.identity}_{self.last_pressed.index}':
                     check += 1
@@ -106,36 +109,15 @@ class Uisge:
             pass
         else:
             res[0] = m_pos
-            save = self.game_state[last_pos[0]][last_pos[1]]
             self.game_state[last_pos[0]][last_pos[1]] = ''
             self.game_state[m_pos[0]][m_pos[1]] = save
-            
-        if check != 0:
-            for piece in self.pieces:
-                if check != 0:
-                    check = 0
-                    if len(self.game_state) > piece.pos[0]+1:
-                            if self.game_state[piece.pos[0]+1][piece.pos[1]] != '':
-                                check += 1
-                    if check == 0 and 0 <= piece.pos[0]-1:
-                        if self.game_state[piece.pos[0]-1][piece.pos[1]] != '':
-                            check += 1
-                    if check == 0 and len(self.game_state[0]) > piece.pos[1]+1:
-                        if self.game_state[piece.pos[0]][piece.pos[1]+1] != '':
-                            check += 1
-                    if check == 0 and 0 <= piece.pos[1]-1:
-                        if self.game_state[piece.pos[0]][piece.pos[1]-1] != '':
-                            check += 1
-                    if check == 0:
-                        res[0] = last_pos
-                        self.game_state[m_pos[0]][m_pos[1]] = ''
-                        self.game_state[last_pos[0]][last_pos[1]] = save
-                        break
-                    else:
-                        res[0] = m_pos
-        check = 0
 
-        self.check_connection()
+        if check == 0 or not self.check_connection():
+            res[0] = last_pos
+            self.game_state[m_pos[0]][m_pos[1]] = ''
+            self.game_state[last_pos[0]][last_pos[1]] = save
+        else:
+            res[0] = m_pos
 
         for i in range((len(self.pieces)//2)):
             if self.pieces[i].state == 1:
@@ -176,7 +158,7 @@ class Uisge:
             if len(poslist) == 0:
                 break
 
-            if ([5, 11, 17, 23, 19, 35, 41].__contains__(poslist[0]) == False): #exclude right out of bounds 
+            if ([5, 11, 17, 23, 29, 35, 41].__contains__(poslist[0]) == False): #exclude right out of bounds 
                 self.connection_mover(poslist[0], 1, poslist, check) # checking all 4 dirs
             if ([0, 6, 12, 18, 24, 30, 36].__contains__(poslist[0]) == False): #exclude left out of bounds 
                 self.connection_mover(poslist[0], -1, poslist, check)
@@ -195,6 +177,9 @@ class Uisge:
 
         if (ctr != 12):
             print("check failed")
+            self.game_state = self.pre_game_state
+            return False
+        return True
             
         
     def connection_mover(
@@ -231,7 +216,7 @@ class Uisge:
         for row in arr:
             for piece in row:
                 if piece != '':
-                    return ctr
+                    return ctr #searches for first piece
                 ctr += 1
 
     def run(self):
