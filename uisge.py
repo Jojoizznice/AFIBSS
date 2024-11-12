@@ -1,3 +1,4 @@
+
 import pygame
 import sys
 import math
@@ -27,6 +28,7 @@ class Uisge:
             ['','','b_2','','',''],
             ['','','','','','']
             ]
+        self.pre_game_state = self.game_state.copy()
         self.pieces = []
         for j in range(len(self.game_state[0])):
             for i in range(len(self.game_state)-1, 0, -1):
@@ -80,7 +82,7 @@ class Uisge:
                                     self.last_pressed.pos = res[-1]
                                     if self.last_pressed.pos == m_pos:
                                         self.turn = 'b' if self.turn == 'w' else 'w' 
-                                    self.last_pressed = None
+                                        self.last_pressed = None
                                     if res[0]:
                                         print(res[1])
                                         pygame.quit()
@@ -90,6 +92,7 @@ class Uisge:
     def rules_check(self, m_pos, last_pos):
         res = [last_pos]
         check = 0
+        save = self.game_state[last_pos[0]][last_pos[1]]
         if len(self.game_state) > m_pos[0]+1:
                 if self.game_state[m_pos[0]+1][m_pos[1]] != '' and self.game_state[m_pos[0]+1][m_pos[1]] != f'{self.last_pressed.identity}_{self.last_pressed.index}':
                     check += 1
@@ -106,34 +109,16 @@ class Uisge:
             pass
         else:
             res[0] = m_pos
-            save = self.game_state[last_pos[0]][last_pos[1]]
             self.game_state[last_pos[0]][last_pos[1]] = ''
             self.game_state[m_pos[0]][m_pos[1]] = save
-            
-        if check != 0:
-            for piece in self.pieces:
-                if check != 0:
-                    check = 0
-                    if len(self.game_state) > piece.pos[0]+1:
-                            if self.game_state[piece.pos[0]+1][piece.pos[1]] != '':
-                                check += 1
-                    if check == 0 and 0 <= piece.pos[0]-1:
-                        if self.game_state[piece.pos[0]-1][piece.pos[1]] != '':
-                            check += 1
-                    if check == 0 and len(self.game_state[0]) > piece.pos[1]+1:
-                        if self.game_state[piece.pos[0]][piece.pos[1]+1] != '':
-                            check += 1
-                    if check == 0 and 0 <= piece.pos[1]-1:
-                        if self.game_state[piece.pos[0]][piece.pos[1]-1] != '':
-                            check += 1
-                    if check == 0:
-                        res[0] = last_pos
-                        self.game_state[m_pos[0]][m_pos[1]] = ''
-                        self.game_state[last_pos[0]][last_pos[1]] = save
-                        break
-                    else:
-                        res[0] = m_pos
-        check = 0
+
+        if check == 0 or not self.check_connection():
+            res[0] = last_pos
+            self.game_state[m_pos[0]][m_pos[1]] = ''
+            self.game_state[last_pos[0]][last_pos[1]] = save
+        else:
+            res[0] = m_pos
+
         for i in range((len(self.pieces)//2)):
             if self.pieces[i].state == 1:
                 check += 1
@@ -156,7 +141,83 @@ class Uisge:
             if check == 6:
                 res.insert(0, 'White wins')
                 res.insert(0, True)
-                return res      
+                return res     
+
+    def check_connection(self):
+        check = [['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','','']]   # same as self.game_state
+        
+        first: int = self.get_first_field(self.game_state)
+
+        (firstR, firstW) = self.int_to_pos(first)
+
+        check[firstR][firstW] = '0' # first piece is placed in array
+
+        poslist: list[int] = [first]
+        
+        while True:
+            if len(poslist) == 0:
+                break
+
+            if ([5, 11, 17, 23, 29, 35, 41].__contains__(poslist[0]) == False): #exclude right out of bounds 
+                self.connection_mover(poslist[0], 1, poslist, check) # checking all 4 dirs
+            if ([0, 6, 12, 18, 24, 30, 36].__contains__(poslist[0]) == False): #exclude left out of bounds 
+                self.connection_mover(poslist[0], -1, poslist, check)
+
+            if (poslist[0] < 36): #exclude right out of bounds 
+                self.connection_mover(poslist[0], 6, poslist, check)
+            if (poslist[0] > 5): #exclude left out of bounds 
+                self.connection_mover(poslist[0], -6, poslist, check)
+            poslist.remove(poslist[0])
+        
+        ctr = 0
+        for row in check:
+            for piece in row:
+                if (piece != ''):
+                    ctr += 1
+
+        if (ctr != 12):
+            print("check failed")
+            self.game_state = self.pre_game_state
+            return False
+        return True
+            
+        
+    def connection_mover(
+            self,
+            pos: int, 
+            dir: int, 
+            poslist: list[int], 
+            check: list[list[str]]): # dir must be 1, -1, 6 or -6
+    
+        if ([1, -1, 6, -6].__contains__(dir) == -1):
+            raise ValueError(f"internal error in check_connection, was {dir}")
+
+        pos += dir
+        (r, w) = self.int_to_pos(pos)
+
+        if (self.game_state[r][w] != '' and check[r][w] != '0'): # check if piece placed and not already there
+            check[r][w] = '0'
+            poslist.append(pos) # needs further check
+
+
+
+    @staticmethod             
+    def pos_to_int(row, width):
+        return 6 * row + width
+    
+    @staticmethod
+    def int_to_pos(pos):
+        r = int(pos / 6) # row from top
+        w = pos - 6 * int(pos / 6) # width from right
+        return (r, w)
+        
+    def get_first_field(self, arr: list[list[str]]):
+        ctr = 0
+        for row in arr:
+            for piece in row:
+                if piece != '':
+                    return ctr #searches for first piece
+                ctr += 1
 
     def run(self):
         while True:
