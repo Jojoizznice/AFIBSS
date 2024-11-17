@@ -2,6 +2,8 @@
 import pygame
 import sys
 import math
+import time, threading
+import uisgeai
 
 class Figuren:
     def __init__(self, screen, pos, identity, index):
@@ -16,6 +18,9 @@ class Uisge:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Uisge")
+        self.pWisAI, self.pBIsAI, = False, True
+        self.wAI = ""
+        self.bAI = uisgeai.UisgeAi(False)
         self.width, self.height = 7, 6
         self.screen = pygame.display.set_mode((self.width*64, self.height*64))
         self.clock = pygame.time.Clock()
@@ -42,6 +47,13 @@ class Uisge:
             if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+            
+            if (self.turn == 'w' and self.pWisAI):
+                self.wAI.move(self.get_position())
+                pass
+            elif (self.turn == 'b' and self.pBIsAI):
+                self.bAI.move(self.get_position())
+                pass
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.last_pressed:
@@ -199,7 +211,29 @@ class Uisge:
             check[r][w] = '0'
             poslist.append(pos) # needs further check
 
+    def get_position(self) -> str:
+        poslist: list[list[Figuren]] = [[None] * 6, [None] * 6, [None] * 6, [None] * 6, [None] * 6, [None] * 6, [None] * 6]
+#        for i in range(7):
+#            for k in range(6):
+#                poslist[i][k] = i
 
+        for piece in self.pieces:
+            pos = piece.pos
+            poslist[pos[0]][pos[1]] = piece
+
+        posstr = ""
+        for row in poslist:
+            for piece in row:
+                if piece == None:
+                    posstr += '0'
+                    continue
+                p = piece.identity
+                if(piece.state == 1):
+                    p = p.capitalize()
+                posstr += p
+            posstr += "/"
+
+        return posstr + " " + self.turn
 
     @staticmethod             
     def pos_to_int(row, width):
@@ -233,6 +267,7 @@ class Uisge:
             self.move()
             pygame.display.update()
             self.clock.tick(60)
+            
 
 if __name__ == '__main__':
     main = Uisge()
