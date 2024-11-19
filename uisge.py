@@ -2,7 +2,7 @@ import pygame
 import sys
 import math
 import time, threading
-import uisge_ai as uisgeai
+import uisgeai
 
 class Figuren:
     def __init__(self, screen, pos, identity, index):
