@@ -1,9 +1,8 @@
-
 import pygame
 import sys
 import math
 import time, threading
-import uisgeai
+import uisge_ai as uisgeai
 
 class Figuren:
     def __init__(self, screen, pos, identity, index):
@@ -55,14 +54,16 @@ class Uisge:
                 self.bAI.move(self.get_position())
                 pass
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.last_pressed:
                     if self.last_pressed.identity == 'b':
                         self.last_pressed.color = (44,32,21)
                     else:
                         self.last_pressed.color = (204,193,159)
+
                 m_pos = pygame.mouse.get_pos()
                 m_pos = [m_pos[0]//64, m_pos[1]//64]
+
                 if self.game_state[m_pos[0]][m_pos[1]] != '':
                     if self.game_state[m_pos[0]][m_pos[1]][0] == self.turn:
                         if self.game_state[m_pos[0]][m_pos[1]][0] == 'b' and self.turn == 'b':
@@ -72,33 +73,40 @@ class Uisge:
                             piece = self.pieces[int(self.game_state[m_pos[0]][m_pos[1]][2])+6]
                             piece.color = (161,148,119)
                         self.last_pressed = piece
-                else:
-                    if self.last_pressed:
-                        if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 2:
-                            
-                            if self.game_state[self.last_pressed.pos[0]+int((m_pos[0]-self.last_pressed.pos[0])/2)][self.last_pressed.pos[1]+int((m_pos[1]-self.last_pressed.pos[1])/2)] != '':                       
-                                res = self.rules_check(m_pos, self.last_pressed.pos)
-                                self.last_pressed.pos = res[-1]
-                                if self.last_pressed.pos == m_pos:                                    
-                                    self.last_pressed.state *= -1
-                                    self.last_pressed = None
-                                    self.turn = 'b' if self.turn == 'w' else 'w'
-                                if res[0]:
-                                    print(res[1])
-                                    pygame.quit()
-                                    sys.exit()
-                        elif self.last_pressed.state == 1:
-                            if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 1 or math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == math.sqrt(2):
-                                if self.game_state[m_pos[0]][m_pos[1]] == '':
-                                    res = self.rules_check(m_pos, self.last_pressed.pos)
-                                    self.last_pressed.pos = res[-1]
-                                    if self.last_pressed.pos == m_pos:
-                                        self.turn = 'b' if self.turn == 'w' else 'w' 
-                                        self.last_pressed = None
-                                    if res[0]:
-                                        print(res[1])
-                                        pygame.quit()
-                                        sys.exit()
+                    return
+                
+                if not self.last_pressed:
+                    return
+                if math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 2:
+                    
+                    if self.game_state[self.last_pressed.pos[0]+int((m_pos[0]-self.last_pressed.pos[0])/2)][self.last_pressed.pos[1]+int((m_pos[1]-self.last_pressed.pos[1])/2)] != '':                       
+                        res = self.rules_check(m_pos, self.last_pressed.pos)
+                        self.last_pressed.pos = res[-1]
+                        if self.last_pressed.pos == m_pos:                                    
+                            self.last_pressed.state *= -1
+                            self.last_pressed = None
+                            self.turn = 'b' if self.turn == 'w' else 'w'
+                        if res[0]:
+                            print(res[1])
+                            pygame.quit()
+                            sys.exit()
+                    return
+                
+                if self.last_pressed.state == 1:
+                    if not (math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == 1 or math.sqrt((m_pos[0]-self.last_pressed.pos[0])**2+(m_pos[1]-self.last_pressed.pos[1])**2) == math.sqrt(2)):
+                        return
+                    if self.game_state[m_pos[0]][m_pos[1]] != '':
+                        return
+                    res = self.rules_check(m_pos, self.last_pressed.pos)
+                    self.last_pressed.pos = res[-1]
+                    if self.last_pressed.pos == m_pos:
+                        self.turn = 'b' if self.turn == 'w' else 'w' 
+                        self.last_pressed = None
+                    if res[0]:
+                        print(res[1])
+                        pygame.quit()
+                        sys.exit()
+                    return
                         
     
     def rules_check(self, m_pos, last_pos):
@@ -153,7 +161,7 @@ class Uisge:
             if check == 6:
                 res.insert(0, 'White wins')
                 res.insert(0, True)
-                return res     
+                return res
 
     def check_connection(self):
         check = [['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','','']]   # same as self.game_state
@@ -191,8 +199,7 @@ class Uisge:
             print("check failed")
             self.game_state = self.pre_game_state
             return False
-        return True
-            
+        return True     
         
     def connection_mover(
             self,
@@ -234,6 +241,24 @@ class Uisge:
             posstr += "/"
 
         return posstr + " " + self.turn
+    
+    def get_legal_moves(self):
+        pre_game_state = self.game_state.copy()
+        moves = []
+        for piece in self.pieces:
+            if piece.identity != self.turn:
+                continue
+            if self.rules_check((piece.pos[0][0], piece.pos[0][1]+2), piece.pos)[1] == "":
+                moves.append(((piece.pos[0][0], piece.pos[0][1]+2), piece.index))
+            if self.rules_check((piece.pos[0][0], piece.pos[0][1]-2), piece.pos)[1] == "":
+                moves.append(((piece.pos[0][0], piece.pos[0][1]-2), piece.index))
+            if self.rules_check((piece.pos[0][0]+2, piece.pos[0][1]), piece.pos)[1] == "":
+                moves.append(((piece.pos[0][0]+2, piece.pos[0][1]), piece.index))
+            if self.rules_check((piece.pos[0][0]-2, piece.pos[0][1]), piece.pos)[1] == "":
+                moves.append(((piece.pos[0][0]-2, piece.pos[0][1]), piece.index))
+        print(moves)
+        return moves
+
 
     @staticmethod             
     def pos_to_int(row, width):
@@ -267,7 +292,6 @@ class Uisge:
             self.move()
             pygame.display.update()
             self.clock.tick(60)
-            
 
 if __name__ == '__main__':
     main = Uisge()
