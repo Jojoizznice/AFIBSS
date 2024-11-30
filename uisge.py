@@ -84,7 +84,7 @@ class Uisge:
                     
                     if self.game_state[self.last_pressed.pos[0]+int((m_pos[0]-self.last_pressed.pos[0])/2)][self.last_pressed.pos[1]+int((m_pos[1]-self.last_pressed.pos[1])/2)] != '':                       
                         res = self.rules_check(m_pos, self.last_pressed.pos)
-                        self.last_pressed.pos = res[-1]
+                        self.last_pressed.pos = res[-2]
                         if self.last_pressed.pos == m_pos:                                    
                             self.last_pressed.state *= -1
                             self.turn = 'b' if self.turn == 'w' else 'w'
@@ -101,7 +101,7 @@ class Uisge:
                     if self.game_state[m_pos[0]][m_pos[1]] != '':
                         return
                     res = self.rules_check(m_pos, self.last_pressed.pos)
-                    self.last_pressed.pos = res[-1]
+                    self.last_pressed.pos = res[-2]
                     if self.last_pressed.pos == m_pos:
                         self.turn = 'b' if self.turn == 'w' else 'w' 
                         self.last_pressed = None
@@ -296,7 +296,7 @@ class Uisge:
     
     def show_index(self): #For debugging (shows index of pieces in pieces array in UI)
         for piece in self.pieces:
-            self.game_font.render_to(self.screen, (piece.pos[0]*64+20, piece.pos[1]*64+20), f'{piece.index}')
+            self.game_font.render_to(self.screen, (piece.pos[0]*64+26, piece.pos[1]*64+23), f'{piece.index}', (255,255,255))
 
 
     @staticmethod             
@@ -318,12 +318,14 @@ class Uisge:
                 ctr += 1
 
     def initialise(self):
+        pygame.event.pump()
         self.screen.fill((60, 60, 60))
         for i in range(self.width):
             pygame.draw.line(self.screen, (200, 200, 200), (i*64, 0), (i*64, self.height*64))
         for i in range(self.height):
             pygame.draw.line(self.screen, (200, 200, 200), (0, i*64), (self.width*64, i*64))
         for piece in self.pieces:
+            print(piece.index, piece.pos)
             pygame.draw.circle(self.screen, piece.color, (piece.pos[0]*64+32, piece.pos[1]*64+32), 24)
             if piece.state == 1:
                 pygame.draw.circle(self.screen, (0,0,0), (piece.pos[0]*64+32, piece.pos[1]*64+32), 12)
@@ -332,14 +334,14 @@ class Uisge:
         pygame.display.update()
         self.clock.tick(60)
 
-    def run(self):
-        while True:
-            self.initialise()
-            self.get_legal_moves()
-            self.show_index() #For debugging (shows index of pieces in pieces array in UI)
-            self.move()
-            self.update()
+    def frame_step(self):
+        self.initialise()
+        self.get_legal_moves()
+        self.show_index() #For debugging (shows index of pieces in pieces array in UI)
+        self.move()
+        self.update()
 
 if __name__ == '__main__':
     main = Uisge()
-    main.run()
+    while True:
+        main.frame_step()
